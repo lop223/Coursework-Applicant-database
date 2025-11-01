@@ -6,14 +6,64 @@
 
 #include "Applicant.h"
 #include "InputReader.h"
+#include "TestScore.h"
+#include <set>
 
 static std::string FILE_MANE = "data/applicants.txt";
+static const std::set<std::string> validSubjects = { "Physics", "English", "Biology", "Geography" };
 
 ApplicantMenegment::ApplicantMenegment() {
 	loadFromFile();
 }
 ApplicantMenegment::~ApplicantMenegment() {
 	saveToFile();
+}
+
+bool ApplicantMenegment::parseApplicantLine(const std::string& line, Applicant& applicant) {
+    std::istringstream iss(line);
+    std::string token;
+    std::vector<std::string> parts;
+
+    while (std::getline(iss, token, ';')) {
+        size_t start = token.find_first_not_of(" \t");
+        size_t end = token.find_last_not_of(" \t");
+        if (start == std::string::npos)
+            parts.push_back("");
+        else
+            parts.push_back(token.substr(start, end - start + 1));
+    }
+
+    if (parts.size() != 10) {
+        std::cerr << "Invalid CSV line (expected 10 fields): " << line << std::endl;
+        return false;
+    }
+
+    try {
+        int id = std::stoi(parts[0]);
+        std::string fullName = parts[1];
+        std::string passportNumber = parts[2];
+        bool contractBasis = (std::stoi(parts[3]) != 0);
+        bool originalDocuments = (std::stoi(parts[4]) != 0);
+        std::string extraSubject = parts[5];
+        float mathScore = std::stof(parts[6]);
+        float historyScore = std::stof(parts[7]);
+        float ukrainianLanguageScore = std::stof(parts[8]);
+        float extraSubjectScore = std::stof(parts[9]);
+
+        applicant = Applicant(
+            id,
+            FullName(fullName),
+            passportNumber,
+            contractBasis,
+            originalDocuments,
+            TestScore(mathScore, historyScore, ukrainianLanguageScore, extraSubject, extraSubjectScore)
+        );
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error parsing line: " << line << " (" << e.what() << ")" << std::endl;
+        return false;
+    }
 }
 
 void ApplicantMenegment::loadFromFile()
@@ -24,31 +74,15 @@ void ApplicantMenegment::loadFromFile()
         return;
     }
 
+	applicants.clear();
     std::string line;
     while (std::getline(inputFile, line)) {
-        std::istringstream iss(line);
-        int id;
-        std::string fullName;
-        std::string passportNumber;
-        bool contractBasis;
-        bool originalDocuments;
+        if (line.empty()) continue;
 
-        if (!(iss >> id)) {
-            std::cerr << "Error reading id from line: " << line << std::endl;
-            continue;
+        Applicant applicant;
+        if (parseApplicantLine(line, applicant)) {
+            applicants.push_back(applicant);
         }
-        iss >> std::ws;
-        // „итаЇмо fullName до коми
-        if (!std::getline(iss, fullName, ',')) {
-            std::cerr << "Error reading fullName from line: " << line << std::endl;
-            continue;
-        }
-        iss >> std::ws;
-        if (!(iss >> passportNumber >> contractBasis >> originalDocuments)) {
-            std::cerr << "Error reading passport/flags from line: " << line << std::endl;
-            continue;
-        }
-        applicants.push_back(Applicant(id, FullName(fullName), passportNumber, contractBasis, originalDocuments));
     }
 }
 void ApplicantMenegment::saveToFile() {
@@ -57,52 +91,104 @@ void ApplicantMenegment::saveToFile() {
 		std::cerr << "Error opening file: " << FILE_MANE << std::endl;
 		return;
 	}
-	for (const Applicant& applicant : applicants) {
-		outputFile << applicant.getId() << " "
-			<< applicant.getFullName().getFullName() << ", "
-			<< applicant.getPassportNamber() << " "
-			<< applicant.isContractBasis() << " "
-			<< applicant.hasOriginalDocuments() << std::endl;
-	}
+    for (const Applicant& applicant : applicants) {
+        outputFile
+            << applicant.getId() << ";"
+            << applicant.getFullName().getFullName() << ";"
+            << applicant.getPassportNamber() << ";"
+            << (applicant.isContractBasis() ? 1 : 0) << ";"
+            << (applicant.hasOriginalDocuments() ? 1 : 0) << ";"
+            << applicant.getTestScore().getExtraSubject() << ";"
+            << applicant.getTestScore().getMathScore() << ";"
+            << applicant.getTestScore().getHistoryScore() << ";"
+            << applicant.getTestScore().getUkrainianLanguageScore() << ";"
+            << applicant.getTestScore().getExtraSubjectScore()
+            << "\n";
+    }
 }
 void ApplicantMenegment::showAllApplicants() {
 	for (const Applicant applicant : applicants) {
-		std::cout << "ID: " << applicant.getId() << ", Full Name: " << applicant.getFullName().getFullName()
-			<< ", Passport Number: " << applicant.getPassportNamber()
-			<< ", Contract Basis: " << (applicant.isContractBasis() ? "Yes" : "No")
-			<< ", Original Documents: " << (applicant.hasOriginalDocuments() ? "Yes" : "No") << std::endl;
+		std::cout << applicant << std::endl;
 	}
 }
-void ApplicantMenegment::addApplicant(const Applicant& applicant) {
-	applicants.push_back(applicant);
+void ApplicantMenegment::addApplicant(Applicant applicant) {
+    applicants.push_back(std::move(applicant));
 }
-void ApplicantMenegment::removeApplicant(int id) {
-	applicants.erase(std::remove_if(applicants.begin(), applicants.end(),
-		[id](const Applicant& applicant) { return applicant.getId() == id; }), applicants.end());
+bool ApplicantMenegment::removeApplicant(int id) {
+    auto before = applicants.size();
+    applicants.erase(std::remove_if(applicants.begin(), applicants.end(),
+        [id](const Applicant& a) { return a.getId() == id; }), applicants.end());
+    return applicants.size() < before;
 }
-void ApplicantMenegment::removeApplicant(FullName name) {
-	applicants.erase(std::remove_if(applicants.begin(), applicants.end(),
-		[name](const Applicant& applicant) { return applicant.getFullName().getFullName() == name.getFullName(); }), applicants.end());
+bool ApplicantMenegment::removeApplicant(FullName name) {
+    auto before = applicants.size();
+    applicants.erase(std::remove_if(applicants.begin(), applicants.end(),
+        [name](const Applicant& a) { return a.getFullName().getFullName() == name.getFullName(); }), applicants.end());
+    return applicants.size() < before;
+}
+Applicant* ApplicantMenegment::findApplicantById(int id) {
+	for (Applicant& applicant : applicants) {
+		if (applicant.getId() == id) {
+			return &applicant;
+		}
+	}
+	return nullptr;
 }
 void ApplicantMenegment::addApplicantProcces() {
-	int id = InputReader::readInt("Enter ID: ");
-	std::string fullName = InputReader::readString("Enter Full Name: ");
-	std::string passportNumber = InputReader::readString("Enter Passport Number: ");
-	bool contractBasis = InputReader::readBool("Is Contract Basis (1 for Yes, 0 for No): ");
-	bool originalDocuments = InputReader::readBool("Has Original Documents (1 for Yes, 0 for No): ");
+	std::cout << "Add applicant: \n";
+	int id;
+    while (true) {
+        id = InputReader::readInt("Enter ID");
+		if (findApplicantById(id)) {
+			InputReader::printErorMessage("Applicant with this ID already exists. Please enter a different ID.\n");	
+		}
+		else
+		{
+			break;
+		}
+    }
+	std::string fullName = InputReader::readFullName("Enter Full Name");
+	std::string passportNumber = InputReader::readPassportNumber("Enter Passport Number");
+	bool contractBasis = InputReader::readBool("Is Contract Basis (1 for Yes, 0 for No)");
+	bool originalDocuments = InputReader::readBool("Has Original Documents (1 for Yes, 0 for No)");
+    std::string extraSubject;
+	float mathScore = InputReader::readScore("Enter Math Score");
+	float historyScore = InputReader::readScore("Enter History Score");
+	float ukrainianLanguageScore = InputReader::readScore("Enter Ukrainian Language Score");
+    while (true) {
+        extraSubject = InputReader::readString("Enter Extra Subject (Physics, English, Biology, Geography): ");
+        if ( validSubjects.count(extraSubject)) {
+            break;
+        }
+        else
+        {
+            std::cout << "Invalid subject. Please enter one of the following: Physics, English, Biology, Geography.\n";
+        }
+    }
+	float extraSubjectScore = InputReader::readScore("Enter " + extraSubject + " Score");
 
-	Applicant newApplicant(id, FullName(fullName), passportNumber, contractBasis, originalDocuments);
-	addApplicant(newApplicant);
+	Applicant applicant(id, FullName(fullName), passportNumber, contractBasis, originalDocuments,
+        TestScore(mathScore, historyScore, ukrainianLanguageScore, extraSubject, extraSubjectScore));
+	addApplicant(applicant);
+
+	InputReader::printSuccessMessage("Applicant [ " + fullName + " " + std::to_string(id) + " ] added successfully.\n");
 }
 void ApplicantMenegment::removeApplicantProcces() {
     int choice = InputReader::readInt("Remove by: 1. ID\n2. Full Name\nEnter choice: ");
+    auto printResult = [](bool success) {
+        success
+            ? InputReader::printSuccessMessage("Applicant removed successfully.\n")
+            : InputReader::printErorMessage("No applicant found.\n");
+        };
     if (choice == 1) {
         int id = InputReader::readInt("Enter ID: ");
         removeApplicant(id);
+        printResult(removeApplicant(id));
     }
     else if (choice == 2) {
         std::string fullName = InputReader::readString("Enter Full Name: ");
         removeApplicant(FullName(fullName));
+        printResult(removeApplicant(fullName));
     }
     else {
         std::cout << "Invalid choice.\n";

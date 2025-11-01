@@ -1,2 +1,5 @@
-0 Dolhiy Maksum, PH660934 1 0
-3 Crevdiuk Denis, PH334234 1 0
+0;Dolhiy Maksum;011830051;1;0;Physics;194;194;170.7;160
+3;Crevdiuk Denis;251334234;1;0;Biology;157.3;157.3;167.3;123.34
+5;Burkovska Adelina;123235703;1;1;English;123;123;123.3;123
+123;Shumeiko Tanos;934345678;1;0;English;123;200;200;200
+2323;Stark Tony;545334223;1;0;Physics;200;200;200;200

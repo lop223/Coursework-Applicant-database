@@ -1,4 +1,5 @@
-﻿//! CourseworkApplicantDatabase - The project was created for a coursework on the topic "Enrollment Database Management System". C++
+﻿//! CourseworkApplicantDatabase - The project was created for a coursework on the topic "Enrollment Database Management System". 
+//! C++
 
 #include <iostream>
 #include <vector>
@@ -12,6 +13,9 @@ int main()
 
 	ApplicantMenegment applicantMenegment;
 
+	applicantMenegment.showAllApplicants();
+	applicantMenegment.addApplicantProcces();
+	applicantMenegment.addApplicantProcces();
 	applicantMenegment.showAllApplicants();
 	return 0;
 }

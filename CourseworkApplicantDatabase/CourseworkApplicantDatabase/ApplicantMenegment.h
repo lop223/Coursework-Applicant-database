@@ -13,9 +13,12 @@ private:
 
 	void loadFromFile();
 	void saveToFile();
-	void addApplicant(const Applicant& applicant);
-	void removeApplicant(int id);
-	void removeApplicant(FullName name);
+	void addApplicant(Applicant applicant);
+	bool removeApplicant(int id);
+	bool removeApplicant(FullName name);
+
+	bool parseApplicantLine(const std::string& line, Applicant& applicant);
+
 public:
 	ApplicantMenegment();
 	~ApplicantMenegment();

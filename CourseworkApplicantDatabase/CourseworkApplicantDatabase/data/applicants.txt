@@ -1,5 +1,5 @@
-0;Dolhiy Maksum;011830051;1;0;Physics;194;194;170.7;160
-3;Crevdiuk Denis;251334234;1;0;Biology;157.3;157.3;167.3;123.34
-5;Burkovska Adelina;123235703;1;1;English;123;123;123.3;123
-123;Shumeiko Tanos;934345678;1;0;English;123;200;200;200
-2323;Stark Tony;545334223;1;0;Physics;200;200;200;200
+0;Dolhiy Maksum;011830051;1;0;Physics;194;194;170.7;160;"Software Engineering:submitted"
+11;Kruvdyk Denis;123324122;1;1;Geography;174;174;174;174;"Software Engineering:submitted,Computer Science:not_submitted"
+2;Rubachuk Evgen;458123456;1;1;English;160;160;160;160;"Software Engineering:submitted"
+5;Adult Serg;458123456;1;1;English;160;160;160;160;"Software Engineering:submitted"
+6;Josh Bush;234029403;1;1;English;156;167;156;200;"Cybersecurity:submitted,Information and Measurement Technologies:not_submitted"

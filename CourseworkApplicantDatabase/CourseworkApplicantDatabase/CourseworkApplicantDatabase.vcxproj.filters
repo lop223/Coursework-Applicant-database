@@ -39,6 +39,12 @@
     <ClCompile Include="TestScore.cpp">
       <Filter>Исходные файлы\utils</Filter>
     </ClCompile>
+    <ClCompile Include="SpecialtyApplication.cpp">
+      <Filter>Исходные файлы\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleUI.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Applicant.h">
@@ -55,6 +61,12 @@
     </ClInclude>
     <ClInclude Include="TestScore.h">
       <Filter>Файлы заголовков\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="SpecialtyApplication.h">
+      <Filter>Файлы заголовков\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleUI.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

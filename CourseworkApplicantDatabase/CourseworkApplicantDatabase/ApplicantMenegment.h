@@ -16,6 +16,9 @@ private:
 	void addApplicant(Applicant applicant);
 	bool removeApplicant(int id);
 	bool removeApplicant(FullName name);
+	void sortById();
+	void sortByName();
+	void sortByTotalScore();
 
 	bool parseApplicantLine(const std::string& line, Applicant& applicant);
 
@@ -29,6 +32,7 @@ public:
 	void showAllApplicants();
 	void addApplicantProcces();
 	void removeApplicantProcces();
+	void sortApplicantsProcces();
 };
 
 #endif 

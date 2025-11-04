@@ -6,16 +6,13 @@
 
 #include "Applicant.h"
 #include "ApplicantMenegment.h"
+#include "ConsoleUI.h"
 
 int main()
 {
     system("chcp 1251>nul");
 
 	ApplicantMenegment applicantMenegment;
-
-	applicantMenegment.showAllApplicants();
-	applicantMenegment.addApplicantProcces();
-	applicantMenegment.addApplicantProcces();
-	applicantMenegment.showAllApplicants();
+	ConsoleUI::run(applicantMenegment);
 	return 0;
 }

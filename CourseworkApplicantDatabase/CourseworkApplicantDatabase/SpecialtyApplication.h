@@ -26,7 +26,7 @@ struct Specialty {
 	}
 };
 
-static const std::vector<Specialty> ALL_SPECIALTIES = {
+inline const std::vector<Specialty> ALL_SPECIALTIES = {
 	{SpecialtyType::SoftwareEngineering, "Software Engineering", 25, 175},
 	{SpecialtyType::ComputerScience, "Computer Science", 20, 165},
 	{SpecialtyType::ComputerEngineering, "Computer Engineering", 15, 165},
@@ -50,13 +50,18 @@ public:
 	const SpecialtyType& getType() const { return type; };
 	bool isSubmitted() const { return submited; };
 
-	static std::string getSpecialtyName(const SpecialtyApplication& specialty);
+	static std::string getSpecialtyName(const SpecialtyType& type);
+
+	static int getSpecialtyQuota(SpecialtyType type);
+
+	static int getSpecialtyMinScore(SpecialtyType type);
+
 	static SpecialtyType getSpecialtyTypeByName(const std::string& name);
 	
 	void setSubmited(bool value);
 	friend std::ostream& operator<<(std::ostream& os, const SpecialtyApplication& specialty) {
 		os
-			<< "Name: " << getSpecialtyName(specialty)
+			<< "Name: " << getSpecialtyName(specialty.getType())
 			<< "Submited: " << specialty.isSubmitted()
 			<< "\n";
 		return os;

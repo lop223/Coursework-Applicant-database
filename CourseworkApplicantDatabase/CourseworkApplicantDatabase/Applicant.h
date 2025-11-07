@@ -50,7 +50,7 @@ public:
 	bool hasOriginalDocuments() const { return originalDocuments; }
 	const TestScore& getTestScore() const { return testScore; }
 	const float getTotalScore() const { return testScore.getTotalScore(); }
-	const std::vector<SpecialtyApplication> getSpecialties() const { return specialties; }
+	const std::vector<SpecialtyApplication>& getSpecialties() const { return specialties; }
 
 	void addSpecialty(const SpecialtyApplication& specialty);
 };

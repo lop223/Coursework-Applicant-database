@@ -12,7 +12,7 @@ int main()
 {
     system("chcp 1251>nul");
 
-	ApplicantMenegment applicantMenegment;
+	ApplicantManager applicantMenegment;
 	ConsoleUI::run(applicantMenegment);
 	return 0;
 }

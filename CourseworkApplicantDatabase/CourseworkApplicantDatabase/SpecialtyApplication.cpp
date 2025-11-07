@@ -23,13 +23,31 @@ void SpecialtyApplication::setSubmited(bool value) {
 	submited = value;
 }
 
-std::string SpecialtyApplication::getSpecialtyName(const SpecialtyApplication& specialty) {
+std::string SpecialtyApplication::getSpecialtyName(const SpecialtyType& type) {
 	auto it = std::find_if(
 		ALL_SPECIALTIES.begin(),
 		ALL_SPECIALTIES.end(),
-		[&specialty](const Specialty& s) { return s.type == specialty.getType(); }
+		[type](const Specialty& s) { return s.type == type; }
 	);
 	return (it != ALL_SPECIALTIES.end()) ? it->name : "Unknown";
+}
+
+int SpecialtyApplication::getSpecialtyQuota(SpecialtyType type) {
+	auto it = std::find_if(
+		ALL_SPECIALTIES.begin(),
+		ALL_SPECIALTIES.end(),
+		[type](const Specialty& s) { return s.type == type; }
+	);
+	return (it != ALL_SPECIALTIES.end()) ? it->quota : 0;
+}
+
+int SpecialtyApplication::getSpecialtyMinScore(SpecialtyType type) {
+	auto it = std::find_if(
+		ALL_SPECIALTIES.begin(),
+		ALL_SPECIALTIES.end(),
+		[type](const Specialty& s) { return s.type == type; }
+	);
+	return (it != ALL_SPECIALTIES.end()) ? it->minScore : 0;
 }
 
 SpecialtyType SpecialtyApplication::getSpecialtyTypeByName(const std::string& name) {

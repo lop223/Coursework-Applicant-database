@@ -1,18 +1,32 @@
-#ifndef APPLICANT_MENEGMENT
-#define APPLICANT_MENEGMENT
+#pragma once
 
 #include<iostream>
 #include<vector>
 
 #include "Applicant.h"
 
-class ApplicantMenegment
-{
+class ApplicantManager {
+public:
+	ApplicantManager();
+	~ApplicantManager();
+
+	void addApplicantProcces();
+	void removeApplicantProcces();
+	void sortApplicantsProcces();
+	void showAllApplicants();
+
+	Applicant* findApplicantByFullName(const std::string& fullName);
+	Applicant* findApplicantById(int id);
+	Applicant* findApplicantByPassport(const std::string& passportNamber);
+
+	const std::vector<Applicant>& getApplicants() const { return applicants; }
+
 private:
 	std::vector<Applicant> applicants;
 
 	void loadFromFile();
 	void saveToFile();
+
 	void addApplicant(Applicant applicant);
 	bool removeApplicant(int id);
 	bool removeApplicant(FullName name);
@@ -21,19 +35,4 @@ private:
 	void sortByTotalScore();
 
 	bool parseApplicantLine(const std::string& line, Applicant& applicant);
-
-public:
-	ApplicantMenegment();
-	~ApplicantMenegment();
-
-	Applicant* findApplicantById(int id);
-	Applicant* findApplicantByPassport(const std::string& passportNamber);
-	Applicant* findApplicantByFullName(const std::string& fullName);
-	void showAllApplicants();
-	void addApplicantProcces();
-	void removeApplicantProcces();
-	void sortApplicantsProcces();
 };
-
-#endif 
-

@@ -128,23 +128,34 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AdmissionProcessor.cpp" />
     <ClCompile Include="Applicant.cpp" />
     <ClCompile Include="ApplicantMenegment.cpp" />
+    <ClCompile Include="ConsolePrinter.cpp" />
     <ClCompile Include="ConsoleUI.cpp" />
+    <ClCompile Include="FileUtils.cpp" />
     <ClCompile Include="InputReader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="FullName.cpp" />
+    <ClCompile Include="ReportBuilder.cpp" />
     <ClCompile Include="SpecialtyApplication.cpp" />
     <ClCompile Include="TestScore.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AdmissionProcessor.h" />
     <ClInclude Include="Applicant.h" />
     <ClInclude Include="ApplicantMenegment.h" />
+    <ClInclude Include="ConsolePrinter.h" />
     <ClInclude Include="ConsoleUI.h" />
+    <ClInclude Include="FileUtils.h" />
     <ClInclude Include="FullName.h" />
     <ClInclude Include="InputReader.h" />
+    <ClInclude Include="ReportBuilder.h" />
     <ClInclude Include="SpecialtyApplication.h" />
     <ClInclude Include="TestScore.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FileUtils.р" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

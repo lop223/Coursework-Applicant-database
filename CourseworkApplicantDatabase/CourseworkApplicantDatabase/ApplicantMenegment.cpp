@@ -1,26 +1,135 @@
 #include "ApplicantMenegment.h"
 
-#include <fstream>
-#include <sstream>
-#include <iostream>
-
 #include "Applicant.h"
+#include "ConsoleUI.h"
 #include "InputReader.h"
 #include "TestScore.h"
-#include <set>
-#include <algorithm>
 
-static std::string FILE_MANE = "data/applicants.txt";
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <set>
+#include <sstream>
+
+static const std::string FILE_MANE = "data/applicants.txt";
 static const std::set<std::string> validSubjects = { "Physics", "English", "Biology", "Geography" };
 
-ApplicantMenegment::ApplicantMenegment() {
+ApplicantManager::ApplicantManager() {
 	loadFromFile();
 }
-ApplicantMenegment::~ApplicantMenegment() {
+ApplicantManager::~ApplicantManager() {
 	saveToFile();
 }
 
-bool ApplicantMenegment::parseApplicantLine(const std::string& line, Applicant& applicant) {
+void ApplicantManager::addApplicantProcces() {
+    ConsolePrinter::printInfoMessage("Add applicant:");
+    int id;
+    do {
+        id = InputReader::readInt("Enter ID");
+        if (!findApplicantById(id))
+            break;
+        ConsolePrinter::printErrorMessage("Applicant with this ID already exists. Please enter a different ID.");
+    } while (true);
+    std::string fullName = InputReader::readFullName("Enter Full Name");
+    std::string passportNumber;
+    do {
+        passportNumber = InputReader::readPassportNumber("Enter Passport Number");
+        if (!findApplicantByPassport(passportNumber))
+            break;
+        ConsolePrinter::printErrorMessage("Applicant with this Passport number already exists. Please enter a different passport.");
+    } while (true);
+    bool contractBasis = InputReader::readBool("Is Contract Basis (1 for Yes, 0 for No)");
+    bool originalDocuments = InputReader::readBool("Has Original Documents (1 for Yes, 0 for No)");
+    std::string extraSubject;
+    float mathScore = InputReader::readScore("Enter Math Score");
+    float historyScore = InputReader::readScore("Enter History Score");
+    float ukrainianLanguageScore = InputReader::readScore("Enter Ukrainian Language Score");
+    while (true) {
+        extraSubject = InputReader::readString("Enter Extra Subject (Physics, English, Biology, Geography)");
+        if (validSubjects.count(extraSubject))
+            break;
+        else
+            ConsolePrinter::printErrorMessage("Invalid subject. Please enter one of the following: Physics, English, Biology, Geography.");
+    }
+    float extraSubjectScore = InputReader::readScore("Enter " + extraSubject + " Score");
+
+    Applicant applicant(id, FullName(fullName), passportNumber, contractBasis, originalDocuments,
+        TestScore(mathScore, historyScore, ukrainianLanguageScore, extraSubject, extraSubjectScore));
+
+    std::vector<SpecialtyApplication> specialties;
+    int count = InputReader::readInt("Enter number of specialties");
+    for (int i = 0; i < count; ++i) {
+        ConsoleUI::showSpecialties(false);
+
+        int choice = -1;
+        const int maxChoice = static_cast<int>(ALL_SPECIALTIES.size());
+        do {
+            choice = InputReader::readInt("Enter specialty number");
+            if (choice < 1 || choice > maxChoice) {
+                ConsolePrinter::printErrorMessage("Invalid choice, please try again.");
+            }
+        } while (choice < 1 || choice > maxChoice);
+
+        bool submitted = InputReader::readBool("Documents submitted for this specialty (1 = Yes, 0 = No)");
+        SpecialtyType selectedType = ALL_SPECIALTIES[choice - 1].type;
+        specialties.emplace_back(selectedType, submitted);
+    }
+
+    for (auto& s : specialties)
+        applicant.addSpecialty(s);
+
+    addApplicant(applicant);
+    saveToFile();
+
+    ConsolePrinter::printSuccessMessage("Applicant [ " + fullName + " " + std::to_string(id) + " ] added successfully.");
+}
+
+void ApplicantManager::removeApplicantProcces() {
+    int choice = InputReader::readInt("Remove by: 1. ID\n2. Full Name\nEnter choice");
+    auto printResult = [](bool success) {
+        success
+            ? ConsolePrinter::printSuccessMessage("Applicant removed successfully.")
+            : ConsolePrinter::printErrorMessage("No applicant found.");
+        };
+    if (choice == 1) {
+        int id = InputReader::readInt("Enter ID");
+        bool success = removeApplicant(id);
+        printResult(success);
+    }
+    else if (choice == 2) {
+        std::string fullName = InputReader::readString("Enter Full Name");
+        bool success = removeApplicant(fullName);
+        printResult(success);
+    }
+    else {
+        ConsolePrinter::printErrorMessage("Invalid choice.");
+    }
+}
+
+void ApplicantManager::sortApplicantsProcces() {
+    int choice = InputReader::readInt("Sort by:\n1. ID\n2. Full Name\n3. Total Score\nEnter choice");
+    std::cout << "sorting by ";
+    switch (choice)
+    {
+    case 1:
+        sortById();
+        std::cout << "Id...";
+        break;
+    case 2:
+        sortByName();
+        std::cout << "Name...";
+        break;
+    case 3:
+        sortByTotalScore();
+        std::cout << "Total Score...";
+        break;
+    default:
+        ConsolePrinter::printErrorMessage("Invalid choice!");
+        break;
+    }
+}
+
+bool ApplicantManager::parseApplicantLine(const std::string& line, Applicant& applicant) {
     std::istringstream iss(line);
     std::string token;
     std::vector<std::string> parts;
@@ -89,7 +198,7 @@ bool ApplicantMenegment::parseApplicantLine(const std::string& line, Applicant& 
     }
 }
 
-void ApplicantMenegment::loadFromFile()
+void ApplicantManager::loadFromFile()
 {
     std::ifstream inputFile(FILE_MANE);
     if (!inputFile.is_open()) {
@@ -109,7 +218,7 @@ void ApplicantMenegment::loadFromFile()
     }
 }
 
-void ApplicantMenegment::saveToFile() {
+void ApplicantManager::saveToFile() {
     std::ofstream outputFile(FILE_MANE);
     if (!outputFile.is_open()) {
         std::cerr << "Error opening file: " << FILE_MANE << std::endl;
@@ -120,7 +229,7 @@ void ApplicantMenegment::saveToFile() {
         std::ostringstream specStream;
         const auto& specialties = applicant.getSpecialties();
         for (size_t i = 0; i < specialties.size(); ++i) {
-            specStream << SpecialtyApplication::getSpecialtyName(specialties[i])
+            specStream << SpecialtyApplication::getSpecialtyName(specialties[i].getType())
                 << ":"
                 << (specialties[i].isSubmitted() ? "submitted" : "not_submitted");
             if (i < specialties.size() - 1) specStream << ",";
@@ -143,158 +252,59 @@ void ApplicantMenegment::saveToFile() {
     outputFile.close();
 }
 
-void ApplicantMenegment::showAllApplicants() {
+void ApplicantManager::showAllApplicants() {
 	for (const Applicant applicant : applicants) {
 		std::cout << applicant << std::endl;
 	}
 }
 
-void ApplicantMenegment::sortById() {
+void ApplicantManager::sortById() {
     std::ranges::sort(applicants, {}, &Applicant::getId);
 }
 
-void ApplicantMenegment::sortByName() {
+void ApplicantManager::sortByName() {
     std::ranges::sort(applicants, {}, [](const Applicant& a) { return a.getFullName().getFirstName(); });
 }
 
-void ApplicantMenegment::sortByTotalScore() {
+void ApplicantManager::sortByTotalScore() {
     std::ranges::sort(applicants, {}, &Applicant::getTotalScore);
 }
 
-void ApplicantMenegment::addApplicant(Applicant applicant) {
+void ApplicantManager::addApplicant(Applicant applicant) {
     applicants.push_back(std::move(applicant));
 }
 
-bool ApplicantMenegment::removeApplicant(int id) {
+bool ApplicantManager::removeApplicant(int id) {
     auto before = applicants.size();
     applicants.erase(std::remove_if(applicants.begin(), applicants.end(),
         [id](const Applicant& a) { return a.getId() == id; }), applicants.end());
     return applicants.size() < before;
 }
 
-bool ApplicantMenegment::removeApplicant(FullName name) {
+bool ApplicantManager::removeApplicant(FullName name) {
     auto before = applicants.size();
     applicants.erase(std::remove_if(applicants.begin(), applicants.end(),
         [name](const Applicant& a) { return a.getFullName().getFullName() == name.getFullName(); }), applicants.end());
     return applicants.size() < before;
 }
 
-Applicant* ApplicantMenegment::findApplicantById(int id) {
+Applicant* ApplicantManager::findApplicantById(int id) {
     auto it = std::find_if(applicants.begin(), applicants.end(),
         [id](const Applicant& a) { return a.getId() == id; });
 
     return (it != applicants.end()) ? &(*it) : nullptr;
 }
 
-void ApplicantMenegment::addApplicantProcces() {
-	std::cout << "Add applicant: \n";
-	int id;
-    while (true) {
-        id = InputReader::readInt("Enter ID");
-		if (findApplicantById(id)) {
-			InputReader::printErrorMessage("Applicant with this ID already exists. Please enter a different ID.\n");	
-		}
-		else
-		{
-			break;
-		}
-    }
-	std::string fullName = InputReader::readFullName("Enter Full Name");
-	std::string passportNumber = InputReader::readPassportNumber("Enter Passport Number");
-	bool contractBasis = InputReader::readBool("Is Contract Basis (1 for Yes, 0 for No)");
-	bool originalDocuments = InputReader::readBool("Has Original Documents (1 for Yes, 0 for No)");
-    std::string extraSubject;
-	float mathScore = InputReader::readScore("Enter Math Score");
-	float historyScore = InputReader::readScore("Enter History Score");
-	float ukrainianLanguageScore = InputReader::readScore("Enter Ukrainian Language Score");
-    while (true) {
-        extraSubject = InputReader::readString("Enter Extra Subject (Physics, English, Biology, Geography)");
-        if ( validSubjects.count(extraSubject)) {
-            break;
-        }
-        else
-        {
-            std::cout << "Invalid subject. Please enter one of the following: Physics, English, Biology, Geography.\n";
-        }
-    }
-	float extraSubjectScore = InputReader::readScore("Enter " + extraSubject + " Score");
+Applicant* ApplicantManager::findApplicantByFullName(const std::string& fullName) {
+    auto it = std::find_if(applicants.begin(), applicants.end(),
+        [fullName](const Applicant& a) { return a.getFullName().getFullName() == fullName; });
 
-	Applicant applicant(id, FullName(fullName), passportNumber, contractBasis, originalDocuments,
-        TestScore(mathScore, historyScore, ukrainianLanguageScore, extraSubject, extraSubjectScore));
-
-    std::vector<SpecialtyApplication> specialties;
-    int count = InputReader::readInt("Enter number of specialties");
-    for (int i = 0; i < count; ++i) {
-        std::cout << "\nSelect specialty #" << (i + 1) << ":\n";
-        for (size_t j = 0; j < ALL_SPECIALTIES.size(); ++j) {
-            const auto& s = ALL_SPECIALTIES[j];
-            std::cout << j + 1 << ". " << s.name << " (Min score: " << s.minScore << ")\n";
-        }
-
-        int choice;
-        do {
-            choice = InputReader::readInt("Enter specialty number: ");
-            if (choice < 1 || choice > static_cast<int>(ALL_SPECIALTIES.size())) {
-                std::cout << "Invalid choice, please try again.\n";
-            }
-        } while (choice < 1 || choice > static_cast<int>(ALL_SPECIALTIES.size()));
-
-        bool submitted = InputReader::readBool("Documents submitted for this specialty (1 = Yes, 0 = No): ");
-        SpecialtyType selectedType = ALL_SPECIALTIES[choice - 1].type;
-
-        specialties.emplace_back(selectedType, submitted);
-    }
-
-    for (auto& s : specialties)
-        applicant.addSpecialty(s);
-
-	addApplicant(applicant);
-    saveToFile();
-
-	InputReader::printSuccessMessage("Applicant [ " + fullName + " " + std::to_string(id) + " ] added successfully.\n");
+    return (it != applicants.end()) ? &(*it) : nullptr;
 }
 
-void ApplicantMenegment::removeApplicantProcces() {
-    int choice = InputReader::readInt("Remove by: 1. ID\n2. Full Name\nEnter choice");
-    auto printResult = [](bool success) {
-        success
-            ? InputReader::printSuccessMessage("Applicant removed successfully.\n")
-            : InputReader::printErrorMessage("No applicant found.\n");
-        };
-    if (choice == 1) {
-        int id = InputReader::readInt("Enter ID");
-        removeApplicant(id);
-        printResult(removeApplicant(id));
-    }
-    else if (choice == 2) {
-        std::string fullName = InputReader::readString("Enter Full Name");
-        removeApplicant(FullName(fullName));
-        printResult(removeApplicant(fullName));
-    }
-    else {
-        std::cout << "Invalid choice.\n";
-    }
-}
+Applicant* ApplicantManager::findApplicantByPassport(const std::string& passport) {
+    auto it = std::find_if(applicants.begin(), applicants.end(),
+        [passport](const Applicant& a) { return a.getPassportNamber() == passport; });
 
-void ApplicantMenegment::sortApplicantsProcces() {
-    int choice = InputReader::readInt("Sort by:\n1. ID\n2. Full Name\n3. Total Score\nEnter choice");
-    std::cout << "sorting by ";
-    switch (choice)
-    {
-    case 1:
-        sortById();
-        std::cout << "Id...";
-        break;
-    case 2:
-        sortByName();
-        std::cout << "Name...";
-        break;
-    case 3:
-        sortByTotalScore();
-        std::cout << "Total Score...";
-        break;
-    default:
-        std::cout << "Invalid choice!" << std::endl;
-        break;
-    }
+    return (it != applicants.end()) ? &(*it) : nullptr;
 }

@@ -1,9 +1,12 @@
 #include "InputReader.h"
 
+#include "ConsolePrinter.h"
+
+#include <algorithm>
 #include <iostream>
 #include <limits>
 #include <sstream>
-#include <algorithm>
+
 #define NOMINMAX
 #include <windows.h>
 
@@ -22,11 +25,12 @@ bool InputReader::readBool(const std::string& prompt) {
 }
 
 std::string InputReader::readString(const std::string& prompt) {
-	printInputMessage(prompt);
-	setColor(ConsoleColor::Input);
+	ConsolePrinter::printInputMessage(prompt);
 	std::string value;
-	std::getline(std::cin, value);
-	setColor(ConsoleColor::Default);
+	{
+		ConsolePrinter::ScopedColor scoped(ConsolePrinter::Color::Input);
+		std::getline(std::cin, value);
+	}
 	return value;
 }
 
@@ -39,16 +43,17 @@ float InputReader::readScore(const std::string& prompt) {
 std::string InputReader::readPassportNumber(const std::string& prompt) {
 	std::string passportNumber;
 	while (true) {
-		printInputMessage(prompt);
-		setColor(ConsoleColor::Input);
-		std::getline(std::cin, passportNumber);
-		setColor(ConsoleColor::Default);
+		ConsolePrinter::printInputMessage(prompt);
 
+		{
+			ConsolePrinter::ScopedColor scoped(ConsolePrinter::Color::Input);
+			std::getline(std::cin, passportNumber);
+		}
 		if (passportNumber.length() == 9 && std::all_of(passportNumber.begin(), passportNumber.end(), ::isdigit)) {
 			return passportNumber;
 		}
 		else {
-			printErrorMessage("Invalid passport number. It should be exactly 9 digits.\n");
+			ConsolePrinter::printErrorMessage("Invalid passport number. It should be exactly 9 digits.\n");
 		}
 	}
 }
@@ -56,11 +61,11 @@ std::string InputReader::readPassportNumber(const std::string& prompt) {
 std::string InputReader::readFullName(const std::string& prompt) {
 	std::string fullName;
 	while (true) {
-		printInputMessage(prompt);
-		setColor(ConsoleColor::Input);
-		std::getline(std::cin, fullName);
-		setColor(ConsoleColor::Default);
-
+		ConsolePrinter::printInputMessage(prompt);
+		{
+			ConsolePrinter::ScopedColor scoped(ConsolePrinter::Color::Input);
+			std::getline(std::cin, fullName);
+		}
 		std::istringstream iss(fullName);
 		std::string word;
 		int wordCount = 0;
@@ -70,30 +75,7 @@ std::string InputReader::readFullName(const std::string& prompt) {
 			return fullName;
 		}
 		else {
-			printErrorMessage("Invalid full name. Please enter at least a first and last name.\n");
+			ConsolePrinter::printErrorMessage("Invalid full name. Please enter at least a first and last name.\n");
 		}
 	}
-}
-
-void InputReader::setColor(ConsoleColor color) {
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), static_cast<int>(color));
-}
-
-void InputReader::printErrorMessage(const std::string& message) {
-	setColor(ConsoleColor::Error);
-	std::cout << message;
-	setColor(ConsoleColor::Default);
-}
-
-void InputReader::printInputMessage(const std::string& message) {
-	std::cout << message;
-	setColor(ConsoleColor::Input);
-	std::cout << ": ";
-	setColor(ConsoleColor::Default);
-}
-
-void InputReader::printSuccessMessage(const std::string& message) {
-	setColor(ConsoleColor::Success);
-	std::cout << message << std::endl;
-	setColor(ConsoleColor::Default);
 }
